@@ -1,13 +1,13 @@
-const PRODUCTS = [
-  { id: 1, n: "Ivory Textured Kurta", c: "Men", p: 1899, i: "/assets/products/ivory-kurta.jpg" },
-  { id: 2, n: "Sandstone Kurta Set", c: "Men", p: 2299, i: "/assets/products/sandstone-kurta.jpg" },
-  { id: 3, n: "Rose Anarkali Set", c: "Women", p: 2499, i: "/assets/products/rose-anarkali.jpg" },
-  { id: 4, n: "Midnight Nehru Jacket", c: "Men", p: 1999, i: "/assets/products/nehru-jacket.jpeg" }
+let PRODUCTS = [
+  { id: 1, n: "Ivory Textured Kurta", c: "Men", p: 1899, i: "/assets/products/ivory-kurta.jpg", sizes:["S","M","L","XL"], colors:[] },
+  { id: 2, n: "Sandstone Kurta Set", c: "Men", p: 2299, i: "/assets/products/sandstone-kurta.jpg", sizes:["S","M","L","XL"], colors:[] },
+  { id: 3, n: "Rose Anarkali Set", c: "Women", p: 2499, i: "/assets/products/rose-anarkali.jpg", sizes:["S","M","L","XL"], colors:[] },
+  { id: 4, n: "Midnight Nehru Jacket", c: "Men", p: 1999, i: "/assets/products/nehru-jacket.jpeg", sizes:["S","M","L","XL"], colors:[] }
 ];
 
-const money = n => "₹" + n.toLocaleString("en-IN");
-
-function card(p) { return `<div class="product"><div class="photo"><img src="${p.i}" alt="${p.n}"></div><h3>${p.n}</h3><div class="price">${money(p.p)}</div><a class="btn" href="/product.html?id=${p.id}">VIEW PRODUCT</a></div>`; }
+const money = n => "₹" + Number(n || 0).toLocaleString("en-IN");
+const escHtml = s => String(s ?? "").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+function card(p) { const price=p.sale ?? p.p; const old=p.sale ? `<span style="text-decoration:line-through;opacity:.55;margin-left:8px">${money(p.p)}</span>` : ""; return `<div class="product"><div class="photo"><img src="${escHtml(p.i)}" alt="${escHtml(p.n)}"></div><h3>${escHtml(p.n)}</h3><div class="price">${money(price)}${old}</div><a class="btn" href="/product.html?id=${p.id}">VIEW PRODUCT</a></div>`; }
 function render(a, id) { const el = document.querySelector(id); if (el) el.innerHTML = a.map(card).join(""); }
 function cart() { return JSON.parse(localStorage.getItem("atshree_cart") || "[]"); }
 function saveCart(c) { localStorage.setItem("atshree_cart", JSON.stringify(c)); updateBagCount(); }
@@ -18,8 +18,9 @@ function getCartItems() { return cart().map(item => { const product = PRODUCTS.f
 function cartSubtotal() { return getCartItems().reduce((sum, item) => sum + item.total, 0); }
 function shippingCost() { return cartSubtotal() >= 1999 || cartSubtotal() === 0 ? 0 : 99; }
 function cartGrandTotal() { return cartSubtotal() + shippingCost(); }
+
 function updateBagCount() { const count = cart().reduce((sum, item) => sum + item.q, 0); document.querySelectorAll(".bag").forEach(el => { el.textContent = count ? `BAG (${count})` : "BAG"; }); }
-function renderCart() { const container = document.querySelector("#cartItems"); const subtotalEl = document.querySelector("#cartSubtotal"); const shippingEl = document.querySelector("#cartShipping"); const totalEl = document.querySelector("#cartTotal"); if (!container) return; const items = getCartItems(); if (!items.length) { container.innerHTML = `<div class="emptyCart"><h2>Your bag is empty.</h2><p>Discover something from the ATSHREE collection.</p><a class="btn" href="/shop.html">SHOP COLLECTION</a></div>`; if (subtotalEl) subtotalEl.textContent = "₹0"; if (shippingEl) shippingEl.textContent = "₹0"; if (totalEl) totalEl.textContent = "₹0"; return; } container.innerHTML = items.map(item => `<div class="cartItem"><img src="${item.i}" alt="${item.n}" class="cartImage"><div class="cartInfo"><div class="ey">${item.c}</div><h3>${item.n}</h3><div class="cartPrice">${money(item.p)} · Size ${item.size}</div><div class="qty"><button onclick="changeQty(${item.id}, '${item.size}', -1)">−</button><span>${item.q}</span><button onclick="changeQty(${item.id}, '${item.size}', 1)">+</button></div><button class="remove" onclick="removeFromCart(${item.id}, '${item.size}')">REMOVE</button></div><div class="cartLineTotal">${money(item.total)}</div></div>`).join(""); if (subtotalEl) subtotalEl.textContent = money(cartSubtotal()); if (shippingEl) shippingEl.textContent = shippingCost() === 0 ? "FREE" : money(shippingCost()); if (totalEl) totalEl.textContent = money(cartGrandTotal()); }
+function renderCart() { const container = document.querySelector("#cartItems"); const subtotalEl = document.querySelector("#cartSubtotal"); const shippingEl = document.querySelector("#cartShipping"); const totalEl = document.querySelector("#cartTotal"); if (!container) return; const items = getCartItems(); if (!items.length) { container.innerHTML = `<div class="emptyCart"><h2>Your bag is empty.</h2><p>Discover something from the ATSHREE collection.</p><a class="btn" href="/shop.html">SHOP COLLECTION</a></div>`; if (subtotalEl) subtotalEl.textContent = "₹0"; if (shippingEl) shippingEl.textContent = "₹0"; if (totalEl) totalEl.textContent = "₹0"; return; } container.innerHTML = items.map(item => `<div class="cartItem"><img src="${escHtml(item.i)}" alt="${escHtml(item.n)}" class="cartImage"><div class="cartInfo"><div class="ey">${escHtml(item.c)}</div><h3>${escHtml(item.n)}</h3><div class="cartPrice">${money(item.p)} · Size ${escHtml(item.size)}</div><div class="qty"><button onclick="changeQty(${item.id}, '${escHtml(item.size)}', -1)">−</button><span>${item.q}</span><button onclick="changeQty(${item.id}, '${escHtml(item.size)}', 1)">+</button></div><button class="remove" onclick="removeFromCart(${item.id}, '${escHtml(item.size)}')">REMOVE</button></div><div class="cartLineTotal">${money(item.total)}</div></div>`).join(""); if (subtotalEl) subtotalEl.textContent = money(cartSubtotal()); if (shippingEl) shippingEl.textContent = shippingCost() === 0 ? "FREE" : money(shippingCost()); if (totalEl) totalEl.textContent = money(cartGrandTotal()); }
 
 function getCustomer() { return JSON.parse(localStorage.getItem("atshree_customer") || "null"); }
 function saveCustomer(customer) { localStorage.setItem("atshree_customer", JSON.stringify(customer)); }
@@ -53,6 +54,25 @@ window.atshreeSupabaseReady = new Promise((resolve) => {
   s.onload = () => { window.atshreeSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY); resolve(window.atshreeSupabase); };
   s.onerror = () => resolve(null);
   document.head.appendChild(s);
+});
+
+window.atshreeProductsReady = window.atshreeSupabaseReady.then(async sb => {
+  if (!sb) return PRODUCTS;
+  try {
+    const {data,error}=await sb.from("products").select("id,name,category,price,sale_price,image_url,description,fabric,care,sku,featured,sizes,colors,active").eq("active",true).order("id");
+    if (!error && Array.isArray(data) && data.length) {
+      PRODUCTS=data.map(p=>({id:Number(p.id),n:p.name,c:p.category,p:Number(p.price),sale:p.sale_price==null?null:Number(p.sale_price),i:p.image_url||"/assets/products/ivory-kurta.jpg",description:p.description||"",fabric:p.fabric||"",care:p.care||"",sku:p.sku||"",featured:!!p.featured,sizes:Array.isArray(p.sizes)?p.sizes:[],colors:Array.isArray(p.colors)?p.colors:[]}));
+    }
+  } catch(e) { console.warn("Could not load live product catalog",e); }
+  window.dispatchEvent(new CustomEvent("atshree-products-ready"));
+  return PRODUCTS;
+});
+
+window.addEventListener("atshree-products-ready",()=>{
+  if(document.querySelector("#featured")) render(PRODUCTS,"#featured");
+  if(document.querySelector("#shop") && typeof window.show === "function") window.show(new URLSearchParams(location.search).get("category")||"All");
+  renderCart();
+  updateBagCount();
 });
 
 async function supaUser() { if (!window.atshreeSupabase) return null; const { data } = await window.atshreeSupabase.auth.getUser(); return data?.user || null; }
