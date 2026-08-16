@@ -115,7 +115,72 @@ function renderCart() {
   if (totalEl) totalEl.textContent = money(cartGrandTotal());
 }
 
+function getCustomer() {
+  return JSON.parse(localStorage.getItem("atshree_customer") || "null");
+}
+
+function saveCustomer(customer) {
+  localStorage.setItem("atshree_customer", JSON.stringify(customer));
+}
+
+function logoutCustomer() {
+  localStorage.removeItem("atshree_customer");
+  location.href = "/account.html";
+}
+
+function getRewards() {
+  return JSON.parse(localStorage.getItem("atshree_rewards") || '{"points":0,"orders":0}');
+}
+
+function addRewardPoints(points) {
+  const rewards = getRewards();
+  rewards.points += Math.max(0, Number(points) || 0);
+  localStorage.setItem("atshree_rewards", JSON.stringify(rewards));
+  return rewards;
+}
+
+function rewardTier(points) {
+  if (points >= 1000) return "ATSHREE ELITE";
+  if (points >= 500) return "ATSHREE PRIVILEGE";
+  return "ATSHREE INSIDER";
+}
+
+function renderAccount() {
+  const area = document.querySelector("#accountArea");
+  if (!area) return;
+  const customer = getCustomer();
+  if (!customer) {
+    area.innerHTML = `<div class="accountCard"><div class="ey">ATSHREE ACCOUNT</div><h2>Welcome back.</h2><p>Create a customer profile to keep your details, orders and rewards together.</p><form class="form" onsubmit="event.preventDefault();createCustomer(this)"><input name="name" placeholder="Full name" required><input name="email" type="email" placeholder="Email address" required><input name="mobile" placeholder="Mobile number" required><button class="btn">CREATE ACCOUNT</button></form><p class="accountNote">Account authentication is currently a storefront foundation. Secure Supabase authentication will be connected before production launch.</p></div>`;
+    return;
+  }
+  const rewards = getRewards();
+  area.innerHTML = `<div class="accountGrid"><div class="accountCard"><div class="ey">MY PROFILE</div><h2>${customer.name}</h2><p>${customer.email}<br>${customer.mobile || ""}</p><a class="btn" href="/rewards.html">MY REWARDS · ${rewards.points} PTS</a><button class="textBtn" onclick="logoutCustomer()">LOG OUT</button></div><div class="accountCard"><div class="ey">ATSHREE REWARDS</div><h2>${rewardTier(rewards.points)}</h2><div class="rewardPoints">${rewards.points}<span>POINTS</span></div><p>Earn 1 point for every ₹100 spent. Rewards are currently in preview mode.</p><a class="btn" href="/rewards.html">VIEW REWARDS</a></div></div>`;
+}
+
+function createCustomer(form) {
+  saveCustomer({ name: form.name.value.trim(), email: form.email.value.trim(), mobile: form.mobile.value.trim(), createdAt: new Date().toISOString() });
+  if (!localStorage.getItem("atshree_rewards")) localStorage.setItem("atshree_rewards", JSON.stringify({points:0,orders:0}));
+  renderAccount();
+}
+
+function renderRewards() {
+  const area = document.querySelector("#rewardsArea");
+  if (!area) return;
+  const customer = getCustomer();
+  if (!customer) {
+    area.innerHTML = `<div class="accountCard centerCard"><div class="ey">ATSHREE REWARDS</div><h2>Join the circle.</h2><p>Create your ATSHREE account to start earning points.</p><a class="btn" href="/account.html">CREATE ACCOUNT</a></div>`;
+    return;
+  }
+  const rewards = getRewards();
+  const points = rewards.points;
+  const next = points < 500 ? 500 : points < 1000 ? 1000 : 1000;
+  const progress = points >= 1000 ? 100 : Math.min(100, Math.round((points / next) * 100));
+  area.innerHTML = `<div class="rewardHero"><div class="ey">ATSHREE REWARDS</div><h2>${rewardTier(points)}</h2><div class="bigPoints">${points}</div><p>REWARD POINTS</p><div class="progress"><span style="width:${progress}%"></span></div><p>${points >= 1000 ? "You've reached our highest preview tier." : `${next - points} points to your next tier.`}</p></div><div class="rewardCards"><div class="accountCard"><div class="ey">EARN</div><h3>1 point / ₹100</h3><p>Earn points on eligible purchases after successful payment.</p></div><div class="accountCard"><div class="ey">INSIDER</div><h3>0–499 points</h3><p>Member-only previews and early access.</p></div><div class="accountCard"><div class="ey">PRIVILEGE</div><h3>500–999 points</h3><p>Early access plus special member offers.</p></div><div class="accountCard"><div class="ey">ELITE</div><h3>1,000+ points</h3><p>Priority previews and premium member benefits.</p></div></div>`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   renderCart();
   updateBagCount();
+  renderAccount();
+  renderRewards();
 });
