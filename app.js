@@ -4,28 +4,28 @@ const PRODUCTS = [
     n: "Ivory Textured Kurta",
     c: "Men",
     p: 1899,
-    i: i: "/assets/products/ivory-kurta.jpg.avif"
+    i: "/assets/products/ivory-kurta.jpg"
   },
   {
     id: 2,
     n: "Sandstone Kurta Set",
     c: "Men",
     p: 2299,
-    i: i: "/assets/products/sandstone-kurta.jpg.webp"
+    i: "/assets/products/sandstone-kurta.jpg"
   },
   {
     id: 3,
     n: "Rose Anarkali Set",
     c: "Women",
     p: 2499,
-    i: i: "/assets/products/rose-anarkali.jpeg"
+    i: "/assets/products/rose-anarkali.jpg"
   },
   {
     id: 4,
     n: "Midnight Nehru Jacket",
     c: "Men",
     p: 1999,
-    i: i: "/assets/products/nehru-jacket.jpeg"
+    i: "/assets/products/nehru-jacket.jpg"
   }
 ];
 
