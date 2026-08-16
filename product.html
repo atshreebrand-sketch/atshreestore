@@ -1,1 +1,185 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Product | ATSHREE</title><link rel="stylesheet" href="/assets/styles.css"></head><body><div class="top">FREE SHIPPING ON ORDERS ABOVE ₹1,999 · EASY 7-DAY EXCHANGE</div><nav class="nav"><a class="logo" href="/index.html">ATSHREE</a><div class="links"><a href="/pages/shop.html">NEW IN</a><a href="/pages/shop.html?category=Men">MEN</a><a href="/pages/shop.html?category=Women">WOMEN</a><a href="/pages/about.html">OUR STORY</a></div><a class="bag" href="/pages/checkout.html">BAG</a></nav><main><section class="section"><div class="wrap" id="detail"></div></section><script>let p=PRODUCTS.find(x=>x.id==Number(new URLSearchParams(location.search).get('id')))||PRODUCTS[0];document.querySelector('#detail').innerHTML=`<div class="detail"><img src="${p.i}" alt="${p.n}"><div><div class="ey">${p.c} · ATSHREE</div><h1>${p.n}</h1><div class="price">${money(p.p)}</div><p>A refined ATSHREE piece designed for modern Indian occasions. Final fabric, size and care information will be added to each production SKU before launch.</p><h4>SELECT SIZE</h4><div><button class="btn">S</button> <button class="btn">M</button> <button class="btn">L</button> <button class="btn">XL</button></div><br><button class="btn" onclick="add(p.id)">ADD TO BAG</button><ul style="color:#756a60;line-height:2;font-size:12px"><li>Free shipping above ₹1,999</li><li>7-day exchange planned</li><li>Secure payment at launch</li></ul></div></div>`</script></main><footer class="footer"><div class="wrap footgrid"><div><div class="logo" style="color:#fff">ATSHREE</div><p>Modern Indian ethnic wear.<br>Tradition, reimagined.</p></div><div><h4>SHOP</h4><a href="/pages/shop.html">New In</a><br><a href="/pages/shop.html?category=Men">Men</a><br><a href="/pages/shop.html?category=Women">Women</a></div><div><h4>HELP</h4><a href="/pages/shipping.html">Shipping</a><br><a href="/pages/returns.html">Returns</a><br><a href="/pages/contact.html">Contact</a></div><div><h4>LEGAL</h4><a href="/pages/privacy.html">Privacy</a><br><a href="/pages/terms.html">Terms</a><br><a href="/pages/refund.html">Refunds</a></div></div></footer><script src="/assets/app.js"></script></body></html>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Product | ATSHREE</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="top">
+FREE SHIPPING ON ORDERS ABOVE ₹1,999 · EASY 7-DAY EXCHANGE
+</div>
+
+<nav class="nav">
+
+<a class="logo" href="index.html">
+ATSHREE
+</a>
+
+<div class="links">
+<a href="shop.html">NEW IN</a>
+<a href="shop.html?category=Men">MEN</a>
+<a href="shop.html?category=Women">WOMEN</a>
+<a href="about.html">OUR STORY</a>
+</div>
+
+<a class="bag" href="checkout.html">
+BAG
+</a>
+
+</nav>
+
+<main>
+
+<section class="section">
+
+<div class="wrap" id="detail">
+</div>
+
+</section>
+
+</main>
+
+<footer class="footer">
+
+<div class="wrap footgrid">
+
+<div>
+<div class="logo" style="color:#fff">
+ATSHREE
+</div>
+
+<p>
+Modern Indian ethnic wear.<br>
+Tradition, reimagined.
+</p>
+</div>
+
+<div>
+
+<h4>SHOP</h4>
+
+<a href="shop.html">New In</a><br>
+<a href="shop.html?category=Men">Men</a><br>
+<a href="shop.html?category=Women">Women</a>
+
+</div>
+
+<div>
+
+<h4>HELP</h4>
+
+<a href="shipping.html">Shipping</a><br>
+<a href="returns.html">Returns</a><br>
+<a href="contact.html">Contact</a>
+
+</div>
+
+<div>
+
+<h4>LEGAL</h4>
+
+<a href="privacy.html">Privacy</a><br>
+<a href="terms.html">Terms</a><br>
+<a href="refund.html">Refunds</a>
+
+</div>
+
+</div>
+
+</footer>
+
+<script src="app.js"></script>
+
+<script>
+
+const productId =
+Number(new URLSearchParams(location.search).get("id")) || 1;
+
+const p =
+PRODUCTS.find(x => x.id === productId) || PRODUCTS[0];
+
+document.querySelector("#detail").innerHTML = `
+
+<div class="detail">
+
+<div>
+
+<img
+src="${p.i}"
+alt="${p.n}"
+>
+
+</div>
+
+<div>
+
+<div class="ey">
+${p.c} · ATSHREE
+</div>
+
+<h1>
+${p.n}
+</h1>
+
+<div class="price">
+${money(p.p)}
+</div>
+
+<p>
+A refined ATSHREE piece designed for modern Indian occasions.
+Final fabric, size and care information will be added to each
+production SKU before launch.
+</p>
+
+<h4>
+SELECT SIZE
+</h4>
+
+<div>
+
+<button class="btn sizeBtn">S</button>
+<button class="btn sizeBtn">M</button>
+<button class="btn sizeBtn">L</button>
+<button class="btn sizeBtn">XL</button>
+
+</div>
+
+<br>
+
+<button
+class="btn"
+onclick="add(p.id)"
+>
+ADD TO BAG
+</button>
+
+<ul style="color:#756a60;line-height:2;font-size:12px">
+
+<li>
+Free shipping above ₹1,999
+</li>
+
+<li>
+7-day exchange planned
+</li>
+
+<li>
+Secure payment at launch
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+`;
+
+</script>
+
+</body>
+</html>
