@@ -3,179 +3,84 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>Bag | ATSHREE</title>
-
+<title>Checkout | ATSHREE</title>
 <link rel="stylesheet" href="/styles.css">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
-
 <body>
-
-<div class="top">
-FREE SHIPPING ON ORDERS ABOVE ₹1,999 · EASY 7-DAY EXCHANGE
-</div>
-
+<div class="top">FREE SHIPPING ON ORDERS ABOVE ₹1,999 · EASY 7-DAY EXCHANGE</div>
 <nav class="nav">
-
-<a class="logo" href="/index.html">
-ATSHREE
-</a>
-
+<a class="logo" href="/index.html">ATSHREE</a>
 <div class="links">
-<a href="/shop.html">NEW IN</a>
-<a href="/shop.html?category=Men">MEN</a>
-<a href="/shop.html?category=Women">WOMEN</a>
-<a href="/about.html">OUR STORY</a>
+<a href="/shop.html">NEW IN</a><a href="/shop.html?category=Men">MEN</a><a href="/shop.html?category=Women">WOMEN</a><a href="/about.html">OUR STORY</a>
 </div>
-
-<a class="bag" href="/checkout.html">
-BAG
-</a>
-
+<a class="bag" href="/checkout.html">BAG</a>
 </nav>
-
 <main>
-
-<section class="pageHero">
-
-<div class="wrap">
-
-<div class="ey">
-ATSHREE
-</div>
-
-<h1>Your Bag</h1>
-
-<p>
-Review your selected pieces before checkout.
-</p>
-
-</div>
-
-</section>
-
-
+<section class="pageHero"><div class="wrap"><div class="ey">ATSHREE</div><h1>Checkout</h1><p>Complete your details and pay securely.</p></div></section>
 <section class="section">
-
-<div class="wrap">
-
-<div id="cartItems"></div>
-
-
+<div class="wrap checkoutLayout">
+<div>
+<h2>Customer details</h2>
+<form id="checkoutForm" class="form">
+<input id="name" required autocomplete="name" placeholder="Full name">
+<input id="phone" required autocomplete="tel" inputmode="numeric" pattern="[0-9]{10}" placeholder="10-digit mobile number">
+<input id="email" required type="email" autocomplete="email" placeholder="Email address">
+<input id="address" required autocomplete="street-address" placeholder="House / street / locality">
+<div class="checkoutTwo"><input id="city" required autocomplete="address-level2" placeholder="City"><input id="state" required autocomplete="address-level1" placeholder="State"></div>
+<input id="pin" required autocomplete="postal-code" inputmode="numeric" pattern="[0-9]{6}" placeholder="6-digit PIN code">
+<label class="checkRow"><input id="termsCheck" type="checkbox" required> <span>I agree to the ATSHREE terms, privacy and refund policies.</span></label>
+<button class="btn checkoutBtn" type="submit">PAY SECURELY</button>
+<p id="checkoutMessage" class="secureText"></p>
+</form>
+</div>
+<div>
+<h2>Order summary</h2>
+<div id="checkoutItems"></div>
 <div class="cartSummary">
-
-<h2>Order Summary</h2>
-
-<div class="summaryRow">
-<span>Subtotal</span>
-<strong id="cartSubtotal">₹0</strong>
+<div class="summaryRow"><span>Subtotal</span><strong id="cartSubtotal">₹0</strong></div>
+<div class="summaryRow"><span>Shipping</span><strong id="cartShipping">₹0</strong></div>
+<div class="summaryTotal"><span>Total</span><strong id="cartTotal">₹0</strong></div>
 </div>
-
-<div class="summaryRow">
-<span>Shipping</span>
-<strong id="cartShipping">₹0</strong>
 </div>
-
-<div class="summaryTotal">
-<span>Total</span>
-<strong id="cartTotal">₹0</strong>
 </div>
-
-<button
-class="btn checkoutBtn"
-onclick="startCheckout()"
->
-CONTINUE TO CHECKOUT
-</button>
-
-<p class="secureText">
-Secure payment will be available at launch.
-</p>
-
-</div>
-
-</div>
-
 </section>
-
 </main>
-
-
-<footer class="footer">
-
-<div class="wrap footgrid">
-
-<div>
-
-<div class="logo" style="color:#fff">
-ATSHREE
-</div>
-
-<p>
-Modern Indian ethnic wear.<br>
-Tradition, reimagined.
-</p>
-
-</div>
-
-<div>
-
-<h4>SHOP</h4>
-
-<a href="/shop.html">New In</a><br>
-<a href="/shop.html?category=Men">Men</a><br>
-<a href="/shop.html?category=Women">Women</a>
-
-</div>
-
-<div>
-
-<h4>HELP</h4>
-
-<a href="/shipping.html">Shipping</a><br>
-<a href="/returns.html">Returns</a><br>
-<a href="/contact.html">Contact</a>
-
-</div>
-
-<div>
-
-<h4>LEGAL</h4>
-
-<a href="/privacy.html">Privacy</a><br>
-<a href="/terms.html">Terms</a><br>
-<a href="/refund.html">Refunds</a>
-
-</div>
-
-</div>
-
-</footer>
-
-
+<footer class="footer"><div class="wrap footgrid"><div><div class="logo" style="color:#fff">ATSHREE</div><p>Modern Indian ethnic wear.<br>Tradition, reimagined.</p></div><div><h4>SHOP</h4><a href="/shop.html">New In</a><br><a href="/shop.html?category=Men">Men</a><br><a href="/shop.html?category=Women">Women</a></div><div><h4>HELP</h4><a href="/shipping.html">Shipping</a><br><a href="/returns.html">Returns</a><br><a href="/contact.html">Contact</a></div><div><h4>LEGAL</h4><a href="/privacy.html">Privacy</a><br><a href="/terms.html">Terms</a><br><a href="/refund.html">Refunds</a></div></div></footer>
 <script src="/app.js"></script>
-
 <script>
-
-function startCheckout() {
-
-const items = getCartItems();
-
-if (!items.length) {
-
-alert("Your bag is empty.");
-
-return;
-
+function renderCheckoutItems(){
+ const el=document.querySelector('#checkoutItems'); if(!el)return;
+ const items=getCartItems();
+ if(!items.length){el.innerHTML='<div class="emptyCart"><h2>Your bag is empty.</h2><a class="btn" href="/shop.html">SHOP COLLECTION</a></div>';return;}
+ el.innerHTML=items.map(x=>`<div class="checkoutLine"><div><strong>${x.n}</strong><div class="secureText">${x.c} · Size ${x.size} · Qty ${x.q}</div></div><strong>${money(x.total)}</strong></div>`).join('');
+ document.querySelector('#cartSubtotal').textContent=money(cartSubtotal());
+ document.querySelector('#cartShipping').textContent=shippingCost()===0?'FREE':money(shippingCost());
+ document.querySelector('#cartTotal').textContent=money(cartGrandTotal());
 }
-
-alert(
-"Checkout is ready. Payment gateway will be connected next."
-);
-
+async function startPayment(e){
+ e.preventDefault();
+ const msg=document.querySelector('#checkoutMessage'); const items=getCartItems();
+ if(!items.length){msg.textContent='Your bag is empty.';return;}
+ const customer={name:name.value.trim(),phone:phone.value.trim(),email:email.value.trim(),address:address.value.trim(),city:city.value.trim(),state:state.value.trim(),pin:pin.value.trim()};
+ localStorage.setItem('atshree_customer',JSON.stringify(customer));
+ msg.textContent='Creating secure payment…';
+ try{
+  const r=await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:Math.round(cartGrandTotal()*100),receipt:`ATS-${Date.now()}`})});
+  const data=await r.json(); if(!r.ok) throw new Error(data.error||'Payment setup is unavailable');
+  const options={key:data.keyId,amount:data.amount,currency:data.currency,name:'ATSHREE',description:'ATSHREE order',order_id:data.orderId,prefill:{name:customer.name,email:customer.email,contact:customer.phone},notes:{city:customer.city,pin:customer.pin},theme:{color:'#17130f'},handler:async function(response){
+    msg.textContent='Verifying payment…';
+    const vr=await fetch('/api/verify-payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(response)}); const vd=await vr.json();
+    if(!vd.verified) throw new Error('Payment verification failed');
+    const orderNo=`ATS-${Date.now().toString().slice(-8)}`;
+    localStorage.setItem('atshree_last_order',JSON.stringify({orderNo,customer,items,total:cartGrandTotal(),payment:response}));
+    localStorage.removeItem('atshree_cart'); location.href=`/thank-you.html?order=${encodeURIComponent(orderNo)}`;
+  }};
+  const rz=new Razorpay(options); rz.on('payment.failed',function(){msg.textContent='Payment was not completed. Your bag is still saved.';}); rz.open();
+ }catch(err){msg.textContent=err.message||'Unable to start payment.';}
 }
-
+document.querySelector('#checkoutForm').addEventListener('submit',startPayment);
+document.addEventListener('DOMContentLoaded',()=>{renderCheckoutItems();updateBagCount();});
 </script>
-
 </body>
 </html>
