@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Checkout | ATSHREE</title>
-<link rel="stylesheet" href="styles.css">
+
+<title>Bag | ATSHREE</title>
+
+<link rel="stylesheet" href="/styles.css">
 </head>
 
 <body>
@@ -15,18 +17,18 @@ FREE SHIPPING ON ORDERS ABOVE ₹1,999 · EASY 7-DAY EXCHANGE
 
 <nav class="nav">
 
-<a class="logo" href="index.html">
+<a class="logo" href="/index.html">
 ATSHREE
 </a>
 
 <div class="links">
-<a href="shop.html">NEW IN</a>
-<a href="shop.html?category=Men">MEN</a>
-<a href="shop.html?category=Women">WOMEN</a>
-<a href="about.html">OUR STORY</a>
+<a href="/shop.html">NEW IN</a>
+<a href="/shop.html?category=Men">MEN</a>
+<a href="/shop.html?category=Women">WOMEN</a>
+<a href="/about.html">OUR STORY</a>
 </div>
 
-<a class="bag" href="checkout.html">
+<a class="bag" href="/checkout.html">
 BAG
 </a>
 
@@ -42,12 +44,10 @@ BAG
 ATSHREE
 </div>
 
-<h1>
-Checkout
-</h1>
+<h1>Your Bag</h1>
 
 <p>
-Secure payment will be connected before launch.
+Review your selected pieces before checkout.
 </p>
 
 </div>
@@ -57,81 +57,39 @@ Secure payment will be connected before launch.
 
 <section class="section">
 
-<div class="wrap grid2">
+<div class="wrap">
 
-<div>
+<div id="cartItems"></div>
 
-<h2>
-Customer details
-</h2>
 
-<form
-class="form"
-onsubmit="event.preventDefault();alert('Demo checkout — payment gateway will be connected before launch')"
->
+<div class="cartSummary">
 
-<input
-required
-placeholder="Full name"
->
+<h2>Order Summary</h2>
 
-<input
-required
-placeholder="Mobile number"
->
-
-<input
-required
-type="email"
-placeholder="Email"
->
-
-<input
-required
-placeholder="Address"
->
-
-<input
-required
-placeholder="City"
->
-
-<input
-required
-placeholder="State"
->
-
-<input
-required
-placeholder="PIN code"
->
-
-<button
-type="submit"
-class="btn"
->
-CONTINUE TO PAYMENT
-</button>
-
-</form>
-
+<div class="summaryRow">
+<span>Subtotal</span>
+<strong id="cartSubtotal">₹0</strong>
 </div>
 
+<div class="summaryRow">
+<span>Shipping</span>
+<strong id="cartShipping">₹0</strong>
+</div>
 
-<div>
+<div class="summaryTotal">
+<span>Total</span>
+<strong id="cartTotal">₹0</strong>
+</div>
 
-<h2>
-Order summary
-</h2>
+<button
+class="btn checkoutBtn"
+onclick="startCheckout()"
+>
+CONTINUE TO CHECKOUT
+</button>
 
-<p style="color:#756a60;line-height:1.8">
-
-This is the prepared checkout interface.
-
-Razorpay, order persistence and inventory
-checks will be connected after the storefront
-is approved.
-
+<p class="secureText">
+Secure payment will be available at launch.
 </p>
 
 </div>
@@ -160,36 +118,33 @@ Tradition, reimagined.
 
 </div>
 
-
 <div>
 
 <h4>SHOP</h4>
 
-<a href="shop.html">New In</a><br>
-<a href="shop.html?category=Men">Men</a><br>
-<a href="shop.html?category=Women">Women</a>
+<a href="/shop.html">New In</a><br>
+<a href="/shop.html?category=Men">Men</a><br>
+<a href="/shop.html?category=Women">Women</a>
 
 </div>
-
 
 <div>
 
 <h4>HELP</h4>
 
-<a href="shipping.html">Shipping</a><br>
-<a href="returns.html">Returns</a><br>
-<a href="contact.html">Contact</a>
+<a href="/shipping.html">Shipping</a><br>
+<a href="/returns.html">Returns</a><br>
+<a href="/contact.html">Contact</a>
 
 </div>
-
 
 <div>
 
 <h4>LEGAL</h4>
 
-<a href="privacy.html">Privacy</a><br>
-<a href="terms.html">Terms</a><br>
-<a href="refund.html">Refunds</a>
+<a href="/privacy.html">Privacy</a><br>
+<a href="/terms.html">Terms</a><br>
+<a href="/refund.html">Refunds</a>
 
 </div>
 
@@ -197,7 +152,30 @@ Tradition, reimagined.
 
 </footer>
 
-<script src="app.js"></script>
+
+<script src="/app.js"></script>
+
+<script>
+
+function startCheckout() {
+
+const items = getCartItems();
+
+if (!items.length) {
+
+alert("Your bag is empty.");
+
+return;
+
+}
+
+alert(
+"Checkout is ready. Payment gateway will be connected next."
+);
+
+}
+
+</script>
 
 </body>
 </html>
