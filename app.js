@@ -37,12 +37,9 @@ function card(p) {
       <div class="photo">
         <img src="${p.i}" alt="${p.n}">
       </div>
-
       <h3>${p.n}</h3>
-
       <div class="price">${money(p.p)}</div>
-
-      <a class="btn" href="/pages/product.html?id=${p.id}">
+      <a class="btn" href="/product.html?id=${p.id}">
         VIEW PRODUCT
       </a>
     </div>
@@ -69,14 +66,10 @@ function add(id) {
   if (item) {
     item.q++;
   } else {
-    c.push({
-      id: id,
-      q: 1
-    });
+    c.push({ id: id, q: 1 });
   }
 
   saveCart(c);
-
   alert("Added to bag");
 }
 
@@ -106,9 +99,7 @@ function getCartItems() {
   return cart()
     .map(item => {
       const product = PRODUCTS.find(p => p.id === item.id);
-
       if (!product) return null;
-
       return {
         ...product,
         q: item.q,
@@ -119,14 +110,11 @@ function getCartItems() {
 }
 
 function cartSubtotal() {
-  return getCartItems()
-    .reduce((sum, item) => sum + item.total, 0);
+  return getCartItems().reduce((sum, item) => sum + item.total, 0);
 }
 
 function shippingCost() {
-  return cartSubtotal() >= 1999 || cartSubtotal() === 0
-    ? 0
-    : 99;
+  return cartSubtotal() >= 1999 || cartSubtotal() === 0 ? 0 : 99;
 }
 
 function cartGrandTotal() {
@@ -148,7 +136,7 @@ function renderCart() {
       <div class="emptyCart">
         <h2>Your bag is empty.</h2>
         <p>Discover something from the ATSHREE collection.</p>
-        <a class="btn" href="/pages/shop.html">
+        <a class="btn" href="/shop.html">
           SHOP COLLECTION
         </a>
       </div>
@@ -157,58 +145,30 @@ function renderCart() {
     if (subtotalEl) subtotalEl.textContent = "₹0";
     if (shippingEl) shippingEl.textContent = "₹0";
     if (totalEl) totalEl.textContent = "₹0";
-
     return;
   }
 
   container.innerHTML = items.map(item => `
     <div class="cartItem">
-
-      <img
-        src="${item.i}"
-        alt="${item.n}"
-        class="cartImage"
-      >
-
+      <img src="${item.i}" alt="${item.n}" class="cartImage">
       <div class="cartInfo">
         <div class="ey">${item.c}</div>
-
         <h3>${item.n}</h3>
-
-        <div class="cartPrice">
-          ${money(item.p)}
-        </div>
-
+        <div class="cartPrice">${money(item.p)}</div>
         <div class="qty">
           <button onclick="changeQty(${item.id}, -1)">−</button>
           <span>${item.q}</span>
           <button onclick="changeQty(${item.id}, 1)">+</button>
         </div>
-
-        <button
-          class="remove"
-          onclick="removeFromCart(${item.id})"
-        >
-          REMOVE
-        </button>
+        <button class="remove" onclick="removeFromCart(${item.id})">REMOVE</button>
       </div>
-
-      <div class="cartLineTotal">
-        ${money(item.total)}
-      </div>
-
+      <div class="cartLineTotal">${money(item.total)}</div>
     </div>
   `).join("");
 
-  if (subtotalEl)
-    subtotalEl.textContent = money(cartSubtotal());
-
-  if (shippingEl)
-    shippingEl.textContent =
-      shippingCost() === 0 ? "FREE" : money(shippingCost());
-
-  if (totalEl)
-    totalEl.textContent = money(cartGrandTotal());
+  if (subtotalEl) subtotalEl.textContent = money(cartSubtotal());
+  if (shippingEl) shippingEl.textContent = shippingCost() === 0 ? "FREE" : money(shippingCost());
+  if (totalEl) totalEl.textContent = money(cartGrandTotal());
 }
 
 document.addEventListener("DOMContentLoaded", () => {
