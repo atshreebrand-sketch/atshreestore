@@ -5,7 +5,7 @@
 <title>ATSHREE Admin Login</title>
 <link rel="stylesheet" href="/styles.css">
 <style>
-.adminLogin{min-height:70vh;display:grid;place-items:center;padding:60px 20px}.adminLoginCard{width:min(440px,100%);background:#fff;border:1px solid #ddd;padding:34px}.adminLoginCard h1{margin:8px 0 10px}.adminLoginCard .form{margin-top:24px;display:grid;gap:12px}.adminLoginCard input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #ccc}.adminMsg{min-height:24px;margin-top:14px}.adminError{color:#8b2f2f}.adminSuccess{color:#246b36}.adminHint{font-size:12px;color:#756a60;margin-top:18px;line-height:1.6}
+.adminLogin{min-height:70vh;display:grid;place-items:center;padding:60px 20px}.adminLoginCard{width:min(440px,100%);background:#fff;border:1px solid #ddd;padding:34px}.adminLoginCard h1{margin:8px 0 10px}.adminLoginCard .form{margin-top:24px}.adminMsg{min-height:24px;margin-top:14px}.adminError{color:#8b2f2f}.adminHint{font-size:12px;color:#756a60;margin-top:18px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -21,37 +21,59 @@
 <p id="adminMsg" class="adminMsg"></p>
 <p class="adminHint">Only accounts marked as ATSHREE administrators can enter the dashboard. Your normal customer password is used; no separate admin password is stored in the website.</p>
 </div></section></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/supabase.js"></script>
-<script>
-const form=document.querySelector('#adminLoginForm'),msg=document.querySelector('#adminMsg'),btn=document.querySelector('#loginBtn');
-const withTimeout=(promise,ms=12000)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error('The request timed out. Please refresh and try again.')),ms))]);
-async function checkAdmin(){
-  try{
-    const {data:{user}}=await withTimeout(supabaseClient.auth.getUser());
-    if(!user)return false;
-    const {data,is_admin,error}=await withTimeout(supabaseClient.rpc('is_current_user_admin'));
-    if(error)throw error;
-    if(data===true || is_admin===true){location.replace('/admin.html');return true;}
-  }catch(e){console.warn('Admin session check:',e)}
-  return false;
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://schsitbayzsqalkvnpbs.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_rHtZGmayQqlWsI-gJt-i8g_6_7LnaFz';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const form=document.querySelector('#adminLoginForm');
+const msg=document.querySelector('#adminMsg');
+const btn=document.querySelector('#loginBtn');
+
+async function getAdminProfile(userId){
+  const {data,error}=await supabaseClient.from('profiles').select('is_admin').eq('id',userId).maybeSingle();
+  if(error) throw error;
+  return data;
 }
-checkAdmin();
+
+async function checkExistingSession(){
+  try{
+    const {data:{user}}=await supabaseClient.auth.getUser();
+    if(!user)return;
+    const profile=await getAdminProfile(user.id);
+    if(profile?.is_admin)location.replace('/admin.html');
+  }catch(e){
+    console.warn('Existing admin session check failed',e);
+  }
+}
+checkExistingSession();
+
 form.addEventListener('submit',async e=>{
   e.preventDefault();
-  btn.disabled=true;msg.textContent='Signing in…';msg.className='adminMsg';
+  btn.disabled=true;
+  msg.textContent='Signing in…';
+  msg.className='adminMsg';
   try{
-    const {error}=await withTimeout(supabaseClient.auth.signInWithPassword({email:form.email.value.trim(),password:form.password.value}));
+    const {error}=await supabaseClient.auth.signInWithPassword({
+      email:form.email.value.trim(),
+      password:form.password.value
+    });
     if(error)throw error;
-    msg.textContent='Checking administrator access…';
-    const {data,is_admin,error:adminError}=await withTimeout(supabaseClient.rpc('is_current_user_admin'));
-    if(adminError)throw adminError;
-    const allowed=data===true || is_admin===true;
-    if(!allowed){await supabaseClient.auth.signOut();throw new Error('This account does not have admin access. Use your ATSHREE administrator account.');}
-    msg.textContent='Access granted. Opening dashboard…';msg.className='adminMsg adminSuccess';
-    setTimeout(()=>location.replace('/admin.html'),200);
+    const {data:{user}}=await supabaseClient.auth.getUser();
+    if(!user)throw new Error('Login succeeded, but no user session was returned.');
+    const profile=await getAdminProfile(user.id);
+    if(!profile?.is_admin){
+      await supabaseClient.auth.signOut();
+      throw new Error('This account does not have admin access.');
+    }
+    msg.textContent='Login successful. Opening admin…';
+    location.replace('/admin.html');
   }catch(error){
-    msg.textContent=error?.message||'Unable to sign in. Please try again.';msg.className='adminMsg adminError';btn.disabled=false;
+    console.error('Admin login error:',error);
+    msg.textContent=error?.message||'Unable to sign in. Please try again.';
+    msg.className='adminMsg adminError';
+    btn.disabled=false;
   }
 });
 </script>
