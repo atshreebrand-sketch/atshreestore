@@ -38,10 +38,17 @@ export async function cashfreeRequest(path, options = {}) {
 export async function getSupabaseUser(req) {
   const auth = req.headers.authorization || '';
   if (!auth.startsWith('Bearer ')) return null;
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
+  if (!process.env.SUPABASE_URL) return null;
+
+  // Supabase Auth expects a project API key in `apikey` and the customer's
+  // access token in `Authorization`. Use the public publishable key for this
+  // identity check; keep the elevated server key only for server-side data.
+  const projectApiKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!projectApiKey) return null;
+
   const response = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
     headers: {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      apikey: projectApiKey,
       Authorization: auth
     }
   });
