@@ -26,7 +26,6 @@ export default async function handler(req, res) {
     const email = address.email || address.shipping_email || '';
     const phone = String(address.phone || address.mobile || '').replace(/\D/g, '').slice(-10);
     const customerName = address.full_name || address.name || 'ATSHREE Customer';
-    const subtotal = Number(order.total || 0);
     const srItems = (items || []).map((item) => ({
       name: item.product_name,
       sku: `ATS-${item.product_id || item.product_name.replace(/\s+/g, '-').slice(0, 20)}`,
@@ -34,6 +33,7 @@ export default async function handler(req, res) {
       selling_price: Number(item.unit_price || 0),
       discount: 0
     }));
+    const subtotal = srItems.reduce((sum, item) => sum + item.selling_price * item.units, 0);
 
     const payload = {
       order_id: `ATS-${String(order.id).replace(/-/g, '').slice(0, 16)}`,
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       shipping_email: email,
       shipping_phone: phone,
       order_items: srItems,
-      payment_method: order.payment_status === 'paid' ? 'Prepaid' : 'COD',
+      payment_method: order.payment_status === 'paid' ? 'PREPAID' : 'COD',
       sub_total: subtotal,
       length: Number(process.env.SHIPROCKET_LENGTH_CM || 20),
       breadth: Number(process.env.SHIPROCKET_BREADTH_CM || 15),
@@ -70,6 +70,7 @@ export default async function handler(req, res) {
     };
     if (!payload.channel_id) delete payload.channel_id;
 
+    // 1) Create the Shiprocket order and shipment.
     const created = await shiprocketRequest('/orders/create/adhoc', {
       method: 'POST',
       body: JSON.stringify(payload)
@@ -80,6 +81,7 @@ export default async function handler(req, res) {
       throw new Error('Shiprocket did not return order/shipment IDs');
     }
 
+    // 2) Assign an AWB/courier. If courierId is omitted Shiprocket chooses the default.
     const awb = await shiprocketRequest('/courier/assign/awb', {
       method: 'POST',
       body: JSON.stringify({ shipment_id: Number(shipmentId), ...(courierId ? { courier_id: Number(courierId) } : {}) })
@@ -87,29 +89,43 @@ export default async function handler(req, res) {
     const awbCode = awb?.response?.data?.awb_code || awb?.awb_code || awb?.data?.awb_code || '';
     const courierName = awb?.response?.data?.courier_name || awb?.courier_name || awb?.data?.courier_name || null;
     const courierIdReturned = awb?.response?.data?.courier_company_id || awb?.courier_company_id || null;
+    if (!awbCode) throw new Error('Shiprocket did not return an AWB');
 
+    // 3) Generate the shipping label. Shiprocket requires shipment_id as an array.
     let labelUrl = null;
-    if (shipmentId && awbCode) {
-      try {
-        const label = await shiprocketRequest('/courier/generate/label', {
-          method: 'POST',
-          body: JSON.stringify({ shipment_id: [Number(shipmentId)] })
-        });
-        labelUrl = label?.label_url || label?.response?.data?.label_url || label?.data?.label_url || null;
-      } catch (_) {}
+    try {
+      const label = await shiprocketRequest('/courier/generate/label', {
+        method: 'POST',
+        body: JSON.stringify({ shipment_id: [Number(shipmentId)] })
+      });
+      labelUrl = label?.label_url || label?.response?.data?.label_url || label?.data?.label_url || null;
+    } catch (_) {
+      // Label generation can be retried later without recreating the order/AWB.
     }
 
-    const trackingUrl = awbCode ? `https://shiprocket.co/tracking/${encodeURIComponent(awbCode)}` : null;
+    // 4) Request pickup for the shipment.
+    let pickupRequested = false;
+    try {
+      await shiprocketRequest('/courier/generate/pickup', {
+        method: 'POST',
+        body: JSON.stringify({ shipment_id: [Number(shipmentId)] })
+      });
+      pickupRequested = true;
+    } catch (_) {
+      // Keep the shipment usable even if pickup scheduling needs a manual retry.
+    }
+
+    const trackingUrl = `https://shiprocket.co/tracking/${encodeURIComponent(awbCode)}`;
     await supabasePatch(`orders?id=eq.${encodeURIComponent(orderId)}`, {
       shiprocket_order_id: String(shiprocketOrderId),
       shiprocket_shipment_id: String(shipmentId),
-      awb_code: awbCode || null,
+      awb_code: awbCode,
       courier: courierName || order.courier || null,
       shiprocket_courier_id: courierIdReturned ? String(courierIdReturned) : null,
-      tracking_number: awbCode || null,
+      tracking_number: awbCode,
       tracking_url: trackingUrl,
       shiprocket_label_url: labelUrl,
-      shiprocket_status: 'Shipment Booked',
+      shiprocket_status: pickupRequested ? 'Pickup Requested' : 'Shipment Booked',
       status: 'processing'
     });
 
@@ -119,6 +135,7 @@ export default async function handler(req, res) {
       shipmentId,
       awb: awbCode,
       courier: courierName,
+      pickupRequested,
       trackingUrl,
       labelUrl
     });
