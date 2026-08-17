@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment | ATSHREE</title><link rel="stylesheet" href="/styles.css"></head>
+<body>
+<div class="top">ATSHREE · SECURE PAYMENT VERIFICATION</div>
+<nav class="nav"><a class="logo" href="/index.html">ATSHREE</a><div class="links"><a href="/shop.html">NEW IN</a><a href="/shop.html?category=Men">MEN</a><a href="/shop.html?category=Women">WOMEN</a><a href="/about.html">OUR STORY</a></div><a class="bag" href="/shop.html">SHOP</a></nav>
+<main><section class="thankYou"><div class="ey">ATSHREE</div><h1 id="title">Verifying payment…</h1><p id="message">Please wait while we confirm your Cashfree payment and secure your order.</p><div class="orderBox"><div class="ey">PAYMENT STATUS</div><h2 id="status">CHECKING</h2></div><a id="continue" class="btn" href="/shop.html" style="display:none">CONTINUE SHOPPING</a></section></main>
+<script>
+(async function(){
+  const params=new URLSearchParams(location.search), orderId=params.get('order_id');
+  const title=document.querySelector('#title'), message=document.querySelector('#message'), status=document.querySelector('#status');
+  if(!orderId){title.textContent='Payment reference missing';message.textContent='We could not find the Cashfree order reference. Please contact ATSHREE support.';status.textContent='ERROR';return;}
+  try{
+    await window.atshreeSupabaseReady;
+    const sb=window.atshreeSupabase;
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){title.textContent='Please sign in again';message.textContent='Your payment may have completed, but your account session is no longer available. Please sign in and contact ATSHREE support with order '+orderId+'.';status.textContent='SESSION EXPIRED';return;}
+    const pending=JSON.parse(localStorage.getItem('atshree_pending_checkout')||'null');
+    if(!pending||pending.orderId!==orderId){title.textContent='Checkout details missing';message.textContent='Payment was returned successfully, but this browser no longer has the checkout details needed to finalize the order. Please contact ATSHREE support with order '+orderId+'.';status.textContent='NEEDS SUPPORT';return;}
+
+    let verification=null;
+    for(let attempt=0;attempt<5;attempt++){
+      const r=await fetch('/api/cashfree-verify-payment',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({orderId})});
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.error||'Unable to verify payment');
+      verification=d;
+      if(d.verified||d.status==='FAILED') break;
+      await new Promise(resolve=>setTimeout(resolve,2000));
+    }
+    if(!verification?.verified){title.textContent=verification?.status==='PENDING'?'Payment is still processing':'Payment was not completed';message.textContent=verification?.status==='PENDING'?'Cashfree has not marked the payment successful yet. Please wait a moment and refresh this page. Your cart is still saved.':'No successful payment was found. Your cart is still saved and you can retry from checkout.';status.textContent=verification?.status||'FAILED';return;}
+
+    let dbOrderId=null;
+    const {data:existing}=await sb.from('orders').select('id').eq('payment_reference',String(verification.paymentId||'')).maybeSingle();
+    if(existing?.id){dbOrderId=existing.id;}
+    else{
+      const payload=(pending.items||[]).map(x=>({product_id:Number(x.id),size:x.size||'M',quantity:Number(x.q)}));
+      const {data,error}=await sb.rpc('finalize_paid_order',{p_shipping_address:pending.customer,p_payment_reference:String(verification.paymentId||''),p_items:payload});
+      if(error) throw error;
+      dbOrderId=data;
+    }
+    const orderNo='ATS-'+Date.now().toString().slice(-8);
+    localStorage.setItem('atshree_last_order',JSON.stringify({orderNo,dbOrderId,customer:pending.customer,items:pending.items,total:pending.total,payment:{cashfree_order_id:orderId,cashfree_payment_id:verification.paymentId}}));
+    localStorage.removeItem('atshree_pending_checkout');
+    localStorage.removeItem('atshree_cart');
+    location.href='/thank-you.html?order='+encodeURIComponent(orderNo);
+  }catch(error){title.textContent='We could not confirm the order';message.textContent=error.message||'Please contact ATSHREE support with your Cashfree order ID: '+orderId;status.textContent='ERROR';}
+})();
+</script>
+<script src="/app.js"></script>
+</body></html>
