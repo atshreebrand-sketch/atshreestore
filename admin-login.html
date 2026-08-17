@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ATSHREE Admin Login</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+.adminLogin{min-height:70vh;display:grid;place-items:center;padding:60px 20px}.adminLoginCard{width:min(440px,100%);background:#fff;border:1px solid #ddd;padding:34px}.adminLoginCard h1{margin:8px 0 10px}.adminLoginCard .form{margin-top:24px}.adminMsg{min-height:24px;margin-top:14px}.adminError{color:#8b2f2f}.adminHint{font-size:12px;color:#756a60;margin-top:18px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="top">ATSHREE · ADMIN ACCESS</div>
+<nav class="nav"><a class="logo" href="/index.html">ATSHREE</a><div class="links"><a href="/shop.html">STORE</a></div><a class="bag" href="/account.html">ACCOUNT</a></nav>
+<main><section class="adminLogin"><div class="adminLoginCard">
+<div class="ey">ATSHREE CONTROL CENTER</div><h1>Admin Login</h1><p>Sign in with your ATSHREE administrator account.</p>
+<form id="adminLoginForm" class="form">
+<input id="email" type="email" autocomplete="username" placeholder="Admin email" required>
+<input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+<button class="btn" id="loginBtn" type="submit">LOGIN TO ADMIN</button>
+</form>
+<p id="adminMsg" class="adminMsg"></p>
+<p class="adminHint">Only accounts marked as ATSHREE administrators can enter the dashboard. Your normal customer password is used; no separate admin password is stored in the website.</p>
+</div></section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase.js"></script>
+<script>
+const form=document.querySelector('#adminLoginForm'),msg=document.querySelector('#adminMsg'),btn=document.querySelector('#loginBtn');
+(async()=>{const{data:{user}}=await supabaseClient.auth.getUser();if(user){const{data:profile}=await supabaseClient.from('profiles').select('is_admin').eq('id',user.id).maybeSingle();if(profile?.is_admin)location.replace('/admin.html');}})();
+form.addEventListener('submit',async e=>{e.preventDefault();btn.disabled=true;msg.textContent='Signing in…';msg.className='adminMsg';const{error}=await supabaseClient.auth.signInWithPassword({email:form.email.value.trim(),password:form.password.value});if(error){msg.textContent=error.message;msg.className='adminMsg adminError';btn.disabled=false;return;}const{data:{user}}=await supabaseClient.auth.getUser();const{data:profile}=await supabaseClient.from('profiles').select('is_admin').eq('id',user.id).maybeSingle();if(!profile?.is_admin){await supabaseClient.auth.signOut();msg.textContent='This account does not have admin access.';msg.className='adminMsg adminError';btn.disabled=false;return;}location.replace('/admin.html');});
+</script>
+</body>
+</html>
