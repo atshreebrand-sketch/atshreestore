@@ -1,6 +1,7 @@
 const API_VERSION = '2025-01-01';
 const SANDBOX_BASE = 'https://sandbox.cashfree.com/pg';
 const PRODUCTION_BASE = 'https://api.cashfree.com/pg';
+const SUPABASE_PUBLIC_KEY = 'sb_publishable_rHtZGmayQqlWsI-gJt-i8g_6_7LnaFz';
 
 export function cashfreeBaseUrl() {
   return String(process.env.CASHFREE_ENVIRONMENT || 'sandbox').toLowerCase() === 'production'
@@ -40,12 +41,10 @@ export async function getSupabaseUser(req) {
   if (!auth.startsWith('Bearer ')) return null;
   if (!process.env.SUPABASE_URL) return null;
 
-  // Supabase Auth expects a project API key in `apikey` and the customer's
-  // access token in `Authorization`. Use the public publishable key for this
-  // identity check; keep the elevated server key only for server-side data.
-  const projectApiKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!projectApiKey) return null;
-
+  // Auth user verification uses the project's publishable API key plus the
+  // customer's Supabase access token. The publishable key is intentionally
+  // public; the elevated server key remains server-only for database access.
+  const projectApiKey = process.env.SUPABASE_PUBLISHABLE_KEY || SUPABASE_PUBLIC_KEY;
   const response = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
     headers: {
       apikey: projectApiKey,
