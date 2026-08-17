@@ -27,8 +27,10 @@ export default async function handler(req, res) {
     const expected = crypto.createHmac('sha256', process.env.CASHFREE_SECRET_KEY)
       .update(String(timestamp) + rawBody)
       .digest('base64');
-    const valid = crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(String(signature)));
-    if (!valid) return res.status(400).json({ error: 'Invalid webhook signature' });
+    const received = String(signature);
+    if (expected.length !== received.length || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))) {
+      return res.status(400).json({ error: 'Invalid webhook signature' });
+    }
 
     const payload = JSON.parse(rawBody);
     const eventType = String(payload?.type || payload?.event_type || '').toUpperCase();
