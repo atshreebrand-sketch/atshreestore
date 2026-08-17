@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "ATSHREE",
+    "slug": "atshree",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "atshree",
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.atshree.app" },
+    "android": { "package": "com.atshree.app" },
+    "plugins": [],
+    "extra": { "eas": { "projectId": "" } }
+  }
+}
