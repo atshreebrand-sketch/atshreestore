@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { cashfreeRequest, requireCashfreeUser, supabaseGet } from './_cashfree.js';
 
 function baseUrl(req) {
@@ -27,7 +28,6 @@ export default async function handler(req, res) {
     const products = await supabaseGet(`products?id=in.(${ids.join(',')})&active=eq.true&select=id,name,price,sale_price,sizes`);
     const byId = new Map((products || []).map(p => [Number(p.id), p]));
     let subtotal = 0;
-    const orderItems = [];
     for (const item of normalized) {
       const product = byId.get(item.productId);
       if (!product) return res.status(400).json({ error: 'One or more products are unavailable' });
@@ -36,7 +36,6 @@ export default async function handler(req, res) {
       }
       const unit = Number(product.sale_price ?? product.price);
       subtotal += unit * item.quantity;
-      orderItems.push({ product_id: Number(product.id), product_name: product.name, size: item.size, quantity: item.quantity, unit_price: unit });
     }
     const shipping = subtotal > 0 && subtotal < 1999 ? 99 : 0;
     const amount = Number((subtotal + shipping).toFixed(2));
@@ -74,8 +73,7 @@ export default async function handler(req, res) {
       paymentSessionId: created.payment_session_id,
       amount,
       currency: 'INR',
-      environment: String(process.env.CASHFREE_ENVIRONMENT || 'sandbox').toLowerCase() === 'production' ? 'production' : 'sandbox',
-      items: orderItems
+      environment: String(process.env.CASHFREE_ENVIRONMENT || 'sandbox').toLowerCase() === 'production' ? 'production' : 'sandbox'
     });
   } catch (error) {
     return res.status(error.status || 500).json({ error: error.message || 'Unable to create Cashfree payment order' });
