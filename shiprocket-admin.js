@@ -2,26 +2,10 @@ import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+e
 const SUPABASE_URL='https://schsitbayzsqalkvnpbs.supabase.co';
 const SUPABASE_KEY='sb_publishable_rHtZGmayQqlWsI-g8g_6_7LnaFz';
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const css=document.createElement('style');css.textContent='.srTools{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}.srTools button{padding:8px 10px;border:1px solid #17130f;background:#fff;color:#17130f;cursor:pointer}.srTools button.primary{background:#17130f;color:#fff}.srStatus{margin-top:7px;font-size:11px;color:#756a60}.srTracking{display:inline-block;margin-top:7px;text-decoration:underline}.srLabel{display:inline-block;margin-top:7px;text-decoration:underline}';document.head.appendChild(css);
 
-function attachShiprocketControls(){
-  document.querySelectorAll('[data-save-order]').forEach(save=>{
-    const controls=save.parentElement;
-    if(!controls||controls.querySelector('[data-shiprocket]'))return;
-    const b=document.createElement('button');
-    b.type='button';b.textContent='CREATE SHIPMENT';b.dataset.shiprocket=save.dataset.saveOrder;
-    b.onclick=async()=>{
-      b.disabled=true;b.textContent='CREATING…';
-      try{
-        const{data:{session}}=await sb.auth.getSession();
-        if(!session?.access_token)throw Error('Please sign in again.');
-        const r=await fetch('/api/shiprocket/create-shipment',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({orderId:save.dataset.saveOrder})});
-        const data=await r.json();if(!r.ok)throw Error(data.error||'Shiprocket shipment failed');
-        alert(data.alreadyCreated?`Shipment already created. AWB: ${data.awb||'pending'}`:`Shipment created. AWB: ${data.awb||'pending'}`);
-        if(data.trackingUrl)window.open(data.trackingUrl,'_blank');
-        window.location.reload();
-      }catch(e){alert(e.message||'Unable to create shipment');b.disabled=false;b.textContent='CREATE SHIPMENT'}
-    };
-    controls.appendChild(b);
-  });
-}
+async function api(orderId,action){const{data:{session}}=await sb.auth.getSession();if(!session?.access_token)throw Error('Please sign in again.');const r=await fetch('/api/shiprocket/admin-action',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({orderId,action})});const data=await r.json();if(!r.ok)throw Error(data.error||'Shiprocket action failed');return data}
+function attachShiprocketControls(){document.querySelectorAll('[data-save-order]').forEach(save=>{const controls=save.parentElement;if(!controls||controls.querySelector('[data-shiprocket]'))return;const orderId=save.dataset.saveOrder;const box=document.createElement('div');box.className='srTools';box.innerHTML='<button class="primary" data-shiprocket>CREATE SHIPMENT</button>';controls.appendChild(box);const status=document.createElement('div');status.className='srStatus';controls.appendChild(status);const create=box.querySelector('[data-shiprocket]');create.onclick=async()=>{create.disabled=true;create.textContent='CREATING…';status.textContent='';try{const r=await fetch('/api/shiprocket/create-shipment',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${(await sb.auth.getSession()).data.session?.access_token||''}`},body:JSON.stringify({orderId})});const data=await r.json();if(!r.ok)throw Error(data.error||'Shiprocket shipment failed');create.remove();status.innerHTML=`AWB: <b>${esc(data.awb||'pending')}</b> · ${esc(data.courier||'Courier pending')} ${data.pickupRequested?'· Pickup requested':''}`+(data.trackingUrl?`<br><a class="srTracking" href="${esc(data.trackingUrl)}" target="_blank" rel="noopener">TRACK SHIPMENT</a>`:'')+(data.labelUrl?`<br><a class="srLabel" href="${esc(data.labelUrl)}" target="_blank" rel="noopener">PRINT LABEL</a>`:'');addActions(box,status,orderId)}catch(e){status.textContent=e.message||'Unable to create shipment';create.disabled=false;create.textContent='CREATE SHIPMENT'}};});}
+function addActions(box,status,orderId){if(box.querySelector('[data-sr-action]'))return;[['label','GENERATE LABEL'],['pickup','REQUEST PICKUP'],['track','REFRESH TRACKING']].forEach(([action,text])=>{const b=document.createElement('button');b.dataset.srAction=action;b.textContent=text;b.onclick=async()=>{b.disabled=true;b.textContent='WORKING…';try{const r=await api(orderId,action);if(action==='label'&&r.patch?.shiprocket_label_url)status.innerHTML+=`<br><a class="srLabel" href="${esc(r.patch.shiprocket_label_url)}" target="_blank" rel="noopener">PRINT LABEL</a>`;else if(action==='track')status.innerHTML=`Shipment status: <b>${esc(r.patch?.shiprocket_status||'Updated')}</b>`+status.innerHTML.replace(/^Shipment status:[^<]+/,'');else status.textContent=action==='pickup'?'Pickup requested successfully.':'Label generated successfully.';}catch(e){alert(e.message||'Shiprocket action failed')}finally{b.disabled=false;b.textContent=text}};box.appendChild(b)})}
 const observer=new MutationObserver(attachShiprocketControls);observer.observe(document.body,{childList:true,subtree:true});setTimeout(attachShiprocketControls,800);
