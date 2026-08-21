@@ -2,6 +2,10 @@ const SUPABASE_URL="https://schsitbayzsqalkvnpbs.supabase.co";const SUPABASE_PUB
 
 async function addAdminAccessButton(){try{const{data:{user}}=await supabaseClient.auth.getUser();if(!user)return;const{data:profile}=await supabaseClient.from('profiles').select('is_admin').eq('id',user.id).maybeSingle();if(!profile?.is_admin)return;const navRight=document.querySelector('.navRight');if(navRight&&!document.querySelector('[data-atshree-admin-nav]')){const link=document.createElement('a');link.href='/admin.html';link.className='accountLink';link.dataset.atshreeAdminNav='true';link.textContent='ADMIN';navRight.insertBefore(link,navRight.firstChild)}const area=document.querySelector('#accountArea');if(area&&!area.querySelector('[data-atshree-admin-card]')){const card=document.createElement('div');card.className='accountCard';card.dataset.atshreeAdminCard='true';card.style.marginTop='18px';card.innerHTML='<div class="ey">ATSHREE CONTROL CENTER</div><h2>Admin Dashboard</h2><p>Manage products, inventory, orders, customers, coupons, POS, SKU & barcode tools and reports.</p><a class="btn" href="/admin.html">OPEN ADMIN DASHBOARD</a>';area.appendChild(card)}}catch(e){console.warn('Admin indicator unavailable',e)}}
 
+/* Run the admin indicator after the account page renders and whenever its DOM is rebuilt. */
+function startAdminIndicator(){addAdminAccessButton();setTimeout(addAdminAccessButton,500);setTimeout(addAdminAccessButton,1500);const area=document.querySelector('#accountArea');if(area&&!area.dataset.adminObserver){area.dataset.adminObserver='true';new MutationObserver(()=>addAdminAccessButton()).observe(area,{childList:true,subtree:true})}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startAdminIndicator);else startAdminIndicator();supabaseClient.auth.onAuthStateChange(()=>setTimeout(addAdminAccessButton,250));
+
 /* Dedicated ATSHREE admin portal: verify the existing account and allow a direct admin sign-in. */
 (async function adminPortalGuard(){
   if(location.pathname!=='/admin.html')return;
