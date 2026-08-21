@@ -12,6 +12,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
     const user = await requireCashfreeUser(req);
+    if (!user.email_confirmed_at) return res.status(403).json({ error: 'Please confirm your email address before placing an order.' });
+    if (!user.phone_confirmed_at) return res.status(403).json({ error: 'Please verify your mobile number by SMS OTP before placing an order.' });
+
     const { items, customer } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'Cart is empty' });
 
