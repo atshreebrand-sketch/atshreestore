@@ -21,64 +21,71 @@
 <p id="adminMsg" class="adminMsg"></p>
 <p class="adminHint">Your normal ATSHREE account password is used. Only an account marked as an ATSHREE administrator can enter the dashboard.</p>
 </div></section></main>
-<script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  const SUPABASE_URL='https://schsitbayzsqalkvnpbs.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_rHtZGmayQqlWsI-g8g_6_7LnaFz';
+  const form=document.querySelector('#adminLoginForm');
+  const msg=document.querySelector('#adminMsg');
+  const btn=document.querySelector('#loginBtn');
 
-const SUPABASE_URL='https://schsitbayzsqalkvnpbs.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_rHtZGmayQqlWsI-g8g_6_7LnaFz';
-const supabaseClient=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-
-const form=document.querySelector('#adminLoginForm');
-const msg=document.querySelector('#adminMsg');
-const btn=document.querySelector('#loginBtn');
-
-async function adminProfile(userId){
-  const {data,error}=await supabaseClient.from('profiles').select('is_admin').eq('id',userId).maybeSingle();
-  if(error) throw error;
-  return data;
-}
-
-async function checkSession(){
-  try{
-    const {data:{session}}=await supabaseClient.auth.getSession();
-    if(!session) return;
-    const profile=await adminProfile(session.user.id);
-    if(profile?.is_admin) location.replace('/admin.html');
-  }catch(error){
-    console.warn('Admin session check:',error);
-  }
-}
-
-checkSession();
-
-form.addEventListener('submit',async e=>{
-  e.preventDefault();
-  btn.disabled=true;
-  msg.className='adminMsg';
-  msg.textContent='Signing in…';
-  try{
-    const {data,error}=await supabaseClient.auth.signInWithPassword({
-      email:form.email.value.trim(),
-      password:form.password.value
-    });
-    if(error) throw error;
-    const user=data?.user;
-    if(!user) throw new Error('Login succeeded but no user was returned.');
-    const profile=await adminProfile(user.id);
-    if(!profile?.is_admin){
-      await supabaseClient.auth.signOut();
-      throw new Error('This account does not have admin access.');
-    }
-    msg.className='adminMsg adminSuccess';
-    msg.textContent='Login successful. Opening admin dashboard…';
-    location.replace('/admin.html');
-  }catch(error){
-    console.error('ATSHREE admin login:',error);
+  if(!window.supabase || typeof window.supabase.createClient!=='function'){
     msg.className='adminMsg adminError';
-    msg.textContent=error?.message||'Unable to sign in. Please try again.';
-    btn.disabled=false;
+    msg.textContent='Unable to load the secure login service. Please refresh the page and try again.';
+    return;
   }
-});
+
+  const adminSupabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+
+  async function adminProfile(userId){
+    const {data,error}=await adminSupabase.from('profiles').select('is_admin').eq('id',userId).maybeSingle();
+    if(error) throw error;
+    return data;
+  }
+
+  async function checkSession(){
+    try{
+      const {data:{session}}=await adminSupabase.auth.getSession();
+      if(!session)return;
+      const profile=await adminProfile(session.user.id);
+      if(profile?.is_admin)location.replace('/admin.html');
+    }catch(error){
+      console.warn('Admin session check:',error);
+    }
+  }
+
+  checkSession();
+
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();
+    btn.disabled=true;
+    msg.className='adminMsg';
+    msg.textContent='Signing in…';
+    try{
+      const {data,error}=await adminSupabase.auth.signInWithPassword({
+        email:form.email.value.trim(),
+        password:form.password.value
+      });
+      if(error)throw error;
+      const user=data?.user;
+      if(!user)throw new Error('Login succeeded but no user was returned.');
+      const profile=await adminProfile(user.id);
+      if(!profile?.is_admin){
+        await adminSupabase.auth.signOut();
+        throw new Error('This account does not have admin access.');
+      }
+      msg.className='adminMsg adminSuccess';
+      msg.textContent='Login successful. Opening admin dashboard…';
+      location.replace('/admin.html');
+    }catch(error){
+      console.error('ATSHREE admin login:',error);
+      msg.className='adminMsg adminError';
+      msg.textContent=error?.message||'Unable to sign in. Please try again.';
+      btn.disabled=false;
+    }
+  });
+})();
 </script>
 </body>
 </html>
