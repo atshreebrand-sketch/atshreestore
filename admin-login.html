@@ -22,21 +22,22 @@
 <p class="adminHint">Your normal ATSHREE account password is used. Only an account marked as an ATSHREE administrator can enter the dashboard.</p>
 </div></section></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase.js"></script>
 <script>
 (function(){
-  const SUPABASE_URL='https://schsitbayzsqalkvnpbs.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_rHtZGmayQqlWsI-g8g_6_7LnaFz';
   const form=document.querySelector('#adminLoginForm');
   const msg=document.querySelector('#adminMsg');
   const btn=document.querySelector('#loginBtn');
 
-  if(!window.supabase || typeof window.supabase.createClient!=='function'){
-    msg.className='adminMsg adminError';
-    msg.textContent='Unable to load the secure login service. Please refresh the page and try again.';
+  function showError(text){msg.className='adminMsg adminError';msg.textContent=text}
+  function showSuccess(text){msg.className='adminMsg adminSuccess';msg.textContent=text}
+
+  if(!window.supabaseClient){
+    showError('Unable to load the secure login service. Please refresh the page and try again.');
     return;
   }
 
-  const adminSupabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  const adminSupabase=window.supabaseClient;
 
   async function adminProfile(userId){
     const {data,error}=await adminSupabase.from('profiles').select('is_admin').eq('id',userId).maybeSingle();
@@ -75,13 +76,11 @@
         await adminSupabase.auth.signOut();
         throw new Error('This account does not have admin access.');
       }
-      msg.className='adminMsg adminSuccess';
-      msg.textContent='Login successful. Opening admin dashboard…';
+      showSuccess('Login successful. Opening admin dashboard…');
       location.replace('/admin.html');
     }catch(error){
       console.error('ATSHREE admin login:',error);
-      msg.className='adminMsg adminError';
-      msg.textContent=error?.message||'Unable to sign in. Please try again.';
+      showError(error?.message||'Unable to sign in. Please try again.');
       btn.disabled=false;
     }
   });
