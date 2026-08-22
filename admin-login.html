@@ -25,9 +25,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = 'https://schsitbayzsqalkvnpbs.supabase.co';
-// Keep this identical to the working publishable key used by supabase.js.
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_rHtZGmayQqlWsI-g8g_6_7LnaFz';
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+// Use the verified legacy anon key for this standalone browser login flow.
+// The key is intentionally public; Supabase anon/publishable keys are not secrets.
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjaHNpdGJheXpzcWFsa3ZucGJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODYyMDYsImV4cCI6MjEwMjQ2MjIwNn0.wT6Xe40et3P6Dov50GiooIP_pzQjj2exDtbnXAg-4Ws';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const form=document.querySelector('#adminLoginForm');
 const msg=document.querySelector('#adminMsg');
 const btn=document.querySelector('#loginBtn');
