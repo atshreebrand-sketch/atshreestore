@@ -25,7 +25,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = 'https://schsitbayzsqalkvnpbs.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_rHtZGmayQqlWsI-gJt-i8g_6_7LnaFz';
+// Keep this identical to the working publishable key used by supabase.js.
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_rHtZGmayQqlWsI-g8g_6_7LnaFz';
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 const form=document.querySelector('#adminLoginForm');
 const msg=document.querySelector('#adminMsg');
